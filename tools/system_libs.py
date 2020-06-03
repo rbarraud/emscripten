@@ -1698,8 +1698,8 @@ def calculate(temp_files, in_temp, cxx, forced, stdout_=None, stderr_=None):
     libs_to_link.sort(key=lambda x: x[0].endswith('.a'))
 
   # When LINKABLE is set the entire link command line is wrapped in --whole-archive by
-  # Building.link_ldd.  And since --whole-archive/--no-whole-archive processing does not nest we
-  # shouldn't add any extra `--no-whole-archive` or we will undo the intent of Building.link_ldd.
+  # building.link_ldd.  And since --whole-archive/--no-whole-archive processing does not nest we
+  # shouldn't add any extra `--no-whole-archive` or we will undo the intent of building.link_ldd.
   if shared.Settings.LINKABLE and shared.Settings.WASM_BACKEND:
     return [l[0] for l in libs_to_link]
 
