@@ -20,6 +20,7 @@ from subprocess import STDOUT, PIPE
 
 from . import diagnostics
 from . import response_file
+from . import shared
 from .toolchain_profiler import ToolchainProfiler
 from .shared import Settings, CLANG_CC, CLANG_CXX, PYTHON, MACOS
 from .shared import LLVM_NM, EMCC, EMAR, EMXX, EMRANLIB, NODE_JS, WASM_LD, LLVM_AR
@@ -1132,22 +1133,9 @@ def check_closure_compiler(args, env):
     exit_with_error('unrecognized closure compiler --version output (%s):\n%s' % (str(CLOSURE_COMPILER), output))
 
 
-def get_node_directory():
-  return os.path.dirname(NODE_JS[0] if type(NODE_JS) is list else NODE_JS)
-
-
-# When we run some tools from npm (closure, html-minifier-terser), those
-# expect that the tools have node.js accessible in PATH. Place our node
-# there when invoking those tools.
-def env_with_node_in_path():
-  env = os.environ.copy()
-  env['PATH'] = get_node_directory() + os.pathsep + env['PATH']
-  return env
-
-
 def closure_compiler(filename, pretty=True, advanced=True, extra_closure_args=None):
   with ToolchainProfiler.profile_block('closure_compiler'):
-    env = env_with_node_in_path()
+    env = shared.env_with_node_in_path()
     user_args = []
     env_args = os.environ.get('EMCC_CLOSURE_ARGS')
     if env_args:
