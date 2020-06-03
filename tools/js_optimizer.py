@@ -514,7 +514,7 @@ EMSCRIPTEN_FUNCS();
           if DEBUG:
             print('running closure on shell code', file=sys.stderr)
           cld = building.closure_compiler(cld, pretty='minifyWhitespace' not in passes,
-                                                 extra_closure_args=extra_closure_args)
+                                          extra_closure_args=extra_closure_args)
           temp_files.note(cld)
         elif cleanup:
           if DEBUG:
