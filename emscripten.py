@@ -21,6 +21,7 @@ import logging
 import pprint
 from collections import OrderedDict
 
+from tools import building
 from tools import diagnostics
 from tools import shared
 from tools import gen_struct_info
@@ -168,7 +169,7 @@ def parse_fastcomp_output(backend_output, DEBUG):
     metadata['externUses'] += ['Math.fround']
 
   # functions marked llvm.used in the code are exports requested by the user
-  shared.Building.user_requested_exports += metadata['exports']
+  building.user_requested_exports += metadata['exports']
 
   # stackSave() and stackRestore() are JS library functions. If fastcomp generated
   # calls to invoke_*() functions that save and restore the stack, we must include the stack functions
@@ -617,7 +618,7 @@ def create_backend_cmd(infile, temp_js):
     args += ['-emscripten-asmjs-work-around-ios-9-right-shift-bug']
   if shared.Settings.WASM:
     args += ['-emscripten-wasm']
-    if shared.Building.is_wasm_only():
+    if building.is_wasm_only():
       args += ['-emscripten-only-wasm']
   if shared.Settings.CYBERDWARF:
     args += ['-enable-cyberdwarf']
@@ -2078,14 +2079,14 @@ def finalize_wasm(temp_files, infile, outfile, memfile, DEBUG):
   basename = shared.unsuffixed(outfile.name)
   wasm = basename + '.wasm'
   base_wasm = infile
-  shared.Building.save_intermediate(infile, 'base.wasm')
+  building.save_intermediate(infile, 'base.wasm')
 
   args = ['--detect-features']
 
   write_source_map = shared.Settings.DEBUG_LEVEL >= 4
   if write_source_map:
-    shared.Building.emit_wasm_source_map(base_wasm, base_wasm + '.map')
-    shared.Building.save_intermediate(base_wasm + '.map', 'base_wasm.map')
+    building.emit_wasm_source_map(base_wasm, base_wasm + '.map')
+    building.save_intermediate(base_wasm + '.map', 'base_wasm.map')
     args += ['--output-source-map-url=' + shared.Settings.SOURCE_MAP_BASE + os.path.basename(shared.Settings.WASM_BINARY_FILE) + '.map']
 
   # tell binaryen to look at the features section, and if there isn't one, to use MVP
@@ -2123,14 +2124,14 @@ def finalize_wasm(temp_files, infile, outfile, memfile, DEBUG):
     args.append('--pass-arg=legalize-js-interface-export-originals')
   if shared.Settings.DEBUG_LEVEL >= 3:
     args.append('--dwarf')
-  stdout = shared.Building.run_binaryen_command('wasm-emscripten-finalize',
-                                                infile=base_wasm,
-                                                outfile=wasm,
-                                                args=args,
-                                                stdout=subprocess.PIPE)
+  stdout = building.run_binaryen_command('wasm-emscripten-finalize',
+                                         infile=base_wasm,
+                                         outfile=wasm,
+                                         args=args,
+                                         stdout=subprocess.PIPE)
   if write_source_map:
-    shared.Building.save_intermediate(wasm + '.map', 'post_finalize.map')
-  shared.Building.save_intermediate(wasm, 'post_finalize.wasm')
+    building.save_intermediate(wasm + '.map', 'post_finalize.map')
+  building.save_intermediate(wasm, 'post_finalize.wasm')
 
   if not shared.Settings.MEM_INIT_IN_WASM:
     # we have a separate .mem file. binaryen did not strip any trailing zeros,
@@ -2537,7 +2538,7 @@ def load_metadata_wasm(metadata_raw, DEBUG):
   unexpected_exports = [e for e in metadata['exports'] if treat_as_user_function(e)]
   unexpected_exports = [asmjs_mangle(e) for e in unexpected_exports]
   unexpected_exports = [e for e in unexpected_exports if e not in shared.Settings.EXPORTED_FUNCTIONS]
-  shared.Building.user_requested_exports += unexpected_exports
+  building.user_requested_exports += unexpected_exports
 
   # With the wasm backend the set of implemented functions is identical to the set of exports
   # Set this key here simply so that the shared code that handle it.
